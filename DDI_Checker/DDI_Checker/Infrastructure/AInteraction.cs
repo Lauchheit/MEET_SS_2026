@@ -1,15 +1,12 @@
-﻿using DDI_Checker.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using DDI_Checker.Core.Models;
 
 namespace DDI_Checker.Infrastructure
 {
-    internal abstract class AInteraction
+    public abstract class AInteraction
     {
-        protected Drug Drug1;
-        protected Drug Drug2;
-        protected ESeverity Severity;
+        public Drug Drug1 { get; }
+        public Drug Drug2 { get; }
+        public ESeverity Severity { get; }
 
         protected AInteraction(Drug drug1, Drug drug2, ESeverity severity)
         {
@@ -19,9 +16,6 @@ namespace DDI_Checker.Infrastructure
         }
 
         protected abstract char Separator { get; }
-
-        public static AInteraction FromCsvLine(string line)
-            => throw new NotImplementedException(); 
 
         protected string[] Split(string line) => line.Split(Separator)
                                                       .Select(c => c.Trim())
@@ -54,6 +48,5 @@ namespace DDI_Checker.Infrastructure
 
             return HashCode.Combine(drugHash, this.GetType());
         }
-
     }
 }

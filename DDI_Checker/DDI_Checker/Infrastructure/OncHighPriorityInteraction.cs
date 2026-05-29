@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DDI_Checker.Infrastructure
 {
-    internal class OncHighPriorityInteraction : AInteraction
+    public class OncHighPriorityInteraction : AInteraction
     {
         public const char SEPARATOR = '$';
         public const string FILE_PATH = "Resources/DDIs/ONC_High_Priority_Mapped.csv";

@@ -1,0 +1,277 @@
+@page "/"
+@rendermode InteractiveServer
+@inject DataClient DataClient
+
+<PageTitle>DDI Checker</PageTitle>
+
+<div class="page-wrapper @(_menuOpen ? "menu-open" : "")">
+
+    <!-- ── Header ─────────────────────────────────────────── -->
+    <header class="app-header">
+        <div class="header-brand">
+            <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
+                <path d="M9 12h6M12 9v6"/>
+            </svg>
+            <span class="brand-name">DDI Checker</span>
+        </div>
+        <button class="menu-btn" @onclick="ToggleMenu" title="Menu" aria-label="Toggle menu">
+            <span class="hamburger @(_menuOpen ? "is-open" : "")">
+                <span></span><span></span><span></span>
+            </span>
+        </button>
+    </header>
+
+    <!-- ── Side menu ──────────────────────────────────────── -->
+    @if (_menuOpen)
+    {
+        <div class="menu-overlay" @onclick="CloseMenu"></div>
+    }
+    <aside class="side-menu @(_menuOpen ? "is-visible" : "")">
+        <div class="side-menu-inner">
+            <div class="side-menu-header">Navigation</div>
+            <nav class="side-menu-nav">
+                <button class="side-menu-item active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    Search
+                </button>
+                <button class="side-menu-item disabled" disabled title="Coming soon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    Log
+                </button>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- ── Main content ───────────────────────────────────── -->
+    <main class="main-content">
+        <div class="content-inner">
+
+            <!-- Search card -->
+            <section class="search-card">
+                <h2 class="search-card-title">Check Drug Interactions</h2>
+                <p class="search-card-hint">
+                    Enter one drug to find all its known interactions, or two drugs to check between them.
+                </p>
+
+                <div class="search-inputs-row">
+                    <div class="search-field">
+                        <label class="search-label" for="drug1">Drug 1</label>
+                        <input id="drug1"
+                               class="search-input @(_drug1Error ? "input-error" : "")"
+                               type="text"
+                               placeholder="e.g. Warfarin"
+                               @bind="_drug1"
+                               @bind:event="oninput"
+                               @onkeydown="HandleKeyDown"
+                               autocomplete="off"
+                               spellcheck="false" />
+                        @if (_drug1Error)
+                        {
+                            <span class="field-error">Please enter at least one drug name.</span>
+                        }
+                    </div>
+
+                    <div class="search-divider" aria-hidden="true">
+                        <span>↔</span>
+                    </div>
+
+                    <div class="search-field">
+                        <label class="search-label" for="drug2">Drug 2 <span class="optional">(optional)</span></label>
+                        <input id="drug2"
+                               class="search-input"
+                               type="text"
+                               placeholder="e.g. Aspirin"
+                               @bind="_drug2"
+                               @bind:event="oninput"
+                               @onkeydown="HandleKeyDown"
+                               autocomplete="off"
+                               spellcheck="false" />
+                    </div>
+                </div>
+
+                <div class="search-actions">
+                    <button class="check-btn" @onclick="RunSearch" disabled="@_loading">
+                        @if (_loading)
+                        {
+                            <span class="btn-spinner"></span>
+                            <span>Searching…</span>
+                        }
+                        else
+                        {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                            </svg>
+                            <span>Check Interactions</span>
+                        }
+                    </button>
+                    @if (_searched)
+                    {
+                        <button class="clear-btn" @onclick="Clear">Clear</button>
+                    }
+                </div>
+            </section>
+
+            <!-- Results -->
+            @if (_searched && !_loading)
+            {
+                <section class="results-section">
+                    @if (_results.Count == 0)
+                    {
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M8 15s1.5-2 4-2 4 2 4 2"/>
+                                <line x1="9" y1="9" x2="9.01" y2="9"/>
+                                <line x1="15" y1="9" x2="15.01" y2="9"/>
+                            </svg>
+                            <p>No interactions found for <strong>@_searchedDrug1@(!string.IsNullOrWhiteSpace(_searchedDrug2) ? $" ↔ {_searchedDrug2}" : "")</strong>.</p>
+                            <span class="empty-hint">Try a broader search or check the spelling.</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="results-header">
+                            <h3 class="results-title">
+                                Results for <strong>@_searchedDrug1@(!string.IsNullOrWhiteSpace(_searchedDrug2) ? $" ↔ {_searchedDrug2}" : "")</strong>
+                            </h3>
+                            <span class="results-count">@_results.Count interaction@(_results.Count == 1 ? "" : "s")</span>
+                        </div>
+
+                        <div class="results-list">
+                            @foreach (var interaction in _results)
+                            {
+                                var cardCls = GetCardClass(interaction.Severity);
+                                var badgeCls = GetBadgeClass(interaction.Severity);
+                                var severityLabel = GetSeverityLabel(interaction.Severity);
+                                var sourceLabel = GetSourceLabel(interaction);
+
+                                <div class="interaction-card @cardCls">
+                                    <div class="card-top">
+                                        <span class="drug-pair">
+                                            <span class="drug-name">@interaction.Drug1.Name</span>
+                                            <span class="pair-arrow">↔</span>
+                                            <span class="drug-name">@interaction.Drug2.Name</span>
+                                        </span>
+                                        <span class="severity-badge @badgeCls">@severityLabel</span>
+                                    </div>
+
+                                    @if (interaction is DrugBankInteraction dbi && !string.IsNullOrWhiteSpace(dbi.Description))
+                                    {
+                                        <p class="card-description">@dbi.Description</p>
+                                    }
+
+                                    <div class="card-footer">
+                                        <span class="source-tag">@sourceLabel</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </section>
+            }
+
+        </div>
+    </main>
+</div>
+
+@code {
+    private string _drug1 = string.Empty;
+    private string _drug2 = string.Empty;
+    private string _searchedDrug1 = string.Empty;
+    private string _searchedDrug2 = string.Empty;
+
+    private bool _menuOpen = false;
+    private bool _searched = false;
+    private bool _loading = false;
+    private bool _drug1Error = false;
+
+    private List<AInteraction> _results = new();
+
+    private void ToggleMenu() => _menuOpen = !_menuOpen;
+    private void CloseMenu() => _menuOpen = false;
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await RunSearch();
+    }
+
+    private async Task RunSearch()
+    {
+        _drug1Error = false;
+
+        if (string.IsNullOrWhiteSpace(_drug1))
+        {
+            _drug1Error = true;
+            return;
+        }
+
+        _searched = true;
+        _loading = true;
+        _results = new();
+        _searchedDrug1 = _drug1.Trim();
+        _searchedDrug2 = _drug2.Trim();
+        StateHasChanged();
+
+        var d1 = _searchedDrug1;
+        var d2 = _searchedDrug2;
+
+        var found = await Task.Run(() =>
+            (string.IsNullOrWhiteSpace(d2)
+                ? DataClient.SearchInteractionWithDrug(d1)
+                : DataClient.SearchInteractionBetweenDrugs(d1, d2))
+            .OrderByDescending(i => i.Severity)
+            .ToList()
+        );
+
+        _results = found;
+        _loading = false;
+    }
+
+    private void Clear()
+    {
+        _drug1 = string.Empty;
+        _drug2 = string.Empty;
+        _searched = false;
+        _loading = false;
+        _drug1Error = false;
+        _results = new();
+    }
+
+    private static string GetCardClass(ESeverity s) => s switch
+    {
+        ESeverity.HighPriority    => "card-high-priority",
+        ESeverity.NonInterruptive => "card-non-interruptive",
+        _                         => "card-unknown"
+    };
+
+    private static string GetBadgeClass(ESeverity s) => s switch
+    {
+        ESeverity.HighPriority    => "badge-high-priority",
+        ESeverity.NonInterruptive => "badge-non-interruptive",
+        _                         => "badge-unknown"
+    };
+
+    private static string GetSeverityLabel(ESeverity s) => s switch
+    {
+        ESeverity.HighPriority    => "High Priority",
+        ESeverity.NonInterruptive => "Non-Interruptive",
+        ESeverity.Negligible      => "Negligible",
+        _                         => "Unknown"
+    };
+
+    private static string GetSourceLabel(AInteraction i) => i switch
+    {
+        DrugBankInteraction        => "DrugBank",
+        OncHighPriorityInteraction => "ONC High Priority",
+        OncNonInterruptiveInteraction => "ONC Non-Interruptive",
+        _                          => "Unknown"
+    };
+}

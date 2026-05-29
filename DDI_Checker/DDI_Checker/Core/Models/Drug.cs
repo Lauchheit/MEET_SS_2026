@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DDI_Checker.Core.Models
 {
-    internal class Drug
+    public class Drug
     {
         public string Name { get;  }
         public string DrugBankId { get;  }

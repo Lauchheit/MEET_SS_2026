@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DDI_Checker.Core.Models
 {
-    internal enum ESeverity
+    public enum ESeverity
     {
        Unknown = 0,
        Negligible = 1,

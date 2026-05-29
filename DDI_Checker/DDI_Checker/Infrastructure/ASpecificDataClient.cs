@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DDI_Checker.Infrastructure
 {
-    internal abstract class ASpecificDataClient<T> where T : AInteraction
+    public abstract class ASpecificDataClient<T> where T : AInteraction
     {
         public List<T> Interactions { get; } = new();
 
@@ -27,19 +27,19 @@ namespace DDI_Checker.Infrastructure
         }
     }
 
-    internal class DrugBankClient : ASpecificDataClient<DrugBankInteraction>
+    public class DrugBankClient : ASpecificDataClient<DrugBankInteraction>
     {
         protected override DrugBankInteraction ParseLine(string line)
             => new DrugBankInteraction(line);
     }
 
-    internal class OncHighPriorityClient : ASpecificDataClient<OncHighPriorityInteraction>
+    public class OncHighPriorityClient : ASpecificDataClient<OncHighPriorityInteraction>
     {
         protected override OncHighPriorityInteraction ParseLine(string line)
             => new OncHighPriorityInteraction(line);
     }
 
-    internal class OncNonInterruptiveClient : ASpecificDataClient<OncNonInterruptiveInteraction>
+    public class OncNonInterruptiveClient : ASpecificDataClient<OncNonInterruptiveInteraction>
     {
         protected override OncNonInterruptiveInteraction ParseLine(string line)
             => new OncNonInterruptiveInteraction(line);

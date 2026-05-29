@@ -1,11 +1,27 @@
-﻿using DDI_Checker.Infrastructure;
+using DDI_Checker.Components;
+using DDI_Checker.Infrastructure;
 
-var client = new DataClient();
+var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 
-client.FetchAll();
+builder.Services.AddSingleton<DataClient>(_ =>
+{
+    var client = new DataClient();
+    client.FetchAll();
+    return client;
+});
 
-Console.WriteLine("=== Warfarin + Aspirin ===");
-var results = client.SearchInteractionBetweenDrugs("Chlorpromazine","Cocaine");
-foreach (var i in results)
-    Console.WriteLine(i + "\n");
+var app = builder.Build();
+
+if (!app.Environment.IsDevelopment())
+    app.UseHsts();
+
+app.UseStaticFiles();
+app.UseAntiforgery();
+
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
+
+app.Run();

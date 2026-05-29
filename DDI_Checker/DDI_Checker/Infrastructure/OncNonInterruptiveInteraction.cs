@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DDI_Checker.Infrastructure
 {
-    internal class OncNonInterruptiveInteraction : AInteraction
+    public class OncNonInterruptiveInteraction : AInteraction
     {
         public const char SEPARATOR = '$';
         public const string FILE_PATH = "Resources/DDIs/ONC_Non_Interuptive_Mapped.csv";
