@@ -29,5 +29,31 @@ namespace DDI_Checker.Infrastructure
 
         public Tuple<Drug, Drug> GetDrugs() => new(Drug1, Drug2);
         public abstract override string ToString();
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is not AInteraction other) return false;
+
+            var thisId1 = Drug1.DrugBankId;
+            var thisId2 = Drug2.DrugBankId;
+            var otherId1 = other.Drug1.DrugBankId;
+            var otherId2 = other.Drug2.DrugBankId;
+
+            bool sameDrugs = (thisId1 == otherId1 && thisId2 == otherId2) ||
+                             (thisId1 == otherId2 && thisId2 == otherId1);
+
+            bool sameSource = this.GetType() == other.GetType();
+
+            return sameDrugs && sameSource;
+        }
+
+        public override int GetHashCode()
+        {
+            int drugHash = (Drug1.DrugBankId?.GetHashCode() ?? 0) ^
+                           (Drug2.DrugBankId?.GetHashCode() ?? 0);
+
+            return HashCode.Combine(drugHash, this.GetType());
+        }
+
     }
 }

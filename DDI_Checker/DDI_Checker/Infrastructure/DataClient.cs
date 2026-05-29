@@ -1,34 +1,73 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using DDI_Checker.Infrastructure;
+using FuzzySharp;
 
-namespace DDI_Checker.Infrastructure
+internal class DataClient
 {
-    internal class DataClient<T> where T : AInteraction
+    private readonly DrugBankClient _drugBankClient = new();
+    private readonly OncHighPriorityClient _oncHighClient = new();
+    private readonly OncNonInterruptiveClient _oncNonInterruptiveClient = new();
+
+    // alle Interactions zusammen als AInteraction
+    public IEnumerable<AInteraction> AllInteractions = Enumerable.Empty<AInteraction>();
+
+    // einzeln zugänglich falls nötig
+    public IReadOnlyList<DrugBankInteraction> DrugBankInteractions
+        => _drugBankClient.Interactions;
+    public IReadOnlyList<OncHighPriorityInteraction> OncHighPriorityInteractions
+        => _oncHighClient.Interactions;
+    public IReadOnlyList<OncNonInterruptiveInteraction> OncNonInterruptiveInteractions
+        => _oncNonInterruptiveClient.Interactions;
+
+    public void FetchAll()
     {
-        private readonly Func<string, T> _factory;
-        public List<T> Interactions { get; } = new();
+        _drugBankClient.Fetch(DrugBankInteraction.FILE_PATH);
+        _oncHighClient.Fetch(OncHighPriorityInteraction.FILE_PATH);
+        _oncNonInterruptiveClient.Fetch(OncNonInterruptiveInteraction.FILE_PATH);
 
-        public DataClient(Func<string, T> factory)
-        {
-            _factory = factory;
-        }
-
-        public void Fetch(string filepath)
-        {
-            foreach (var line in File.ReadLines(filepath).Skip(1)) // Header überspringen
-            {
-                if (string.IsNullOrWhiteSpace(line)) continue;
-
-                try
-                {
-                    Interactions.Add(_factory(line));
-                }
-                catch (IndexOutOfRangeException)
-                {
-                    Console.WriteLine($"Skipping malformed line: {line}");
-                }
-            }
-        }
+        this.AllInteractions =
+            _drugBankClient.Interactions
+            .Concat<AInteraction>(_oncHighClient.Interactions)
+            .Concat(_oncNonInterruptiveClient.Interactions);
     }
+
+    public IEnumerable<AInteraction> GetAllInteractions()
+    {
+        if (this.AllInteractions.Count() == 0)
+        {
+            FetchAll();
+        }
+        return AllInteractions;
+    }
+
+    public IEnumerable<AInteraction> SearchInteractionWithDrug(string drugQuery, int minScore = 70)
+    {
+        return GetAllInteractions().Where(interaction =>
+        {
+            var (drug1, drug2) = interaction.GetDrugs();
+
+            int score1 = Fuzz.Ratio(drugQuery.ToLower(), drug1.Name.ToLower());
+            int score2 = Fuzz.Ratio(drugQuery.ToLower(), drug2.Name.ToLower());
+
+            return score1 >= minScore || score2 >= minScore;
+        });
+    }
+
+    public IEnumerable<AInteraction> SearchInteractionBetweenDrugs(
+    string drugQuery1, string drugQuery2, int minScore = 90)
+    {
+        var results = GetAllInteractions().Where(interaction =>
+        {
+            var drugs = interaction.GetDrugs();
+            int d1Score1 = Fuzz.Ratio(drugQuery1.ToLower(), drugs.Item1.Name.ToLower());
+            int d1Score2 = Fuzz.Ratio(drugQuery1.ToLower(), drugs.Item2.Name.ToLower());
+            int d2Score1 = Fuzz.Ratio(drugQuery2.ToLower(), drugs.Item1.Name.ToLower());
+            int d2Score2 = Fuzz.Ratio(drugQuery2.ToLower(), drugs.Item2.Name.ToLower());
+
+            return (d1Score1 >= minScore && d2Score2 >= minScore) ||
+                   (d1Score2 >= minScore && d2Score1 >= minScore);
+        }).Distinct();
+
+        return results;
+    }
+
 }
