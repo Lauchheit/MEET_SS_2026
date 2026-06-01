@@ -1,0 +1,303 @@
+@page "/log"
+@rendermode InteractiveServer
+@inject NavigationManager Nav
+
+<PageTitle>DDI Checker – Log</PageTitle>
+
+<div class="page-wrapper @(_menuOpen ? "menu-open" : "")">
+
+    <!-- ── Header ─────────────────────────────────────────── -->
+    <header class="app-header">
+        <div class="header-brand">
+            <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
+                <path d="M9 12h6M12 9v6"/>
+            </svg>
+            <span class="brand-name">DDI Checker</span>
+        </div>
+        <button class="menu-btn" @onclick="ToggleMenu" title="Menu" aria-label="Toggle menu">
+            <span class="hamburger @(_menuOpen ? "is-open" : "")">
+                <span></span><span></span><span></span>
+            </span>
+        </button>
+    </header>
+
+    <!-- ── Side menu ──────────────────────────────────────── -->
+    @if (_menuOpen)
+    {
+        <div class="menu-overlay" @onclick="CloseMenu"></div>
+    }
+    <aside class="side-menu @(_menuOpen ? "is-visible" : "")">
+        <div class="side-menu-inner">
+            <div class="side-menu-header">Navigation</div>
+            <nav class="side-menu-nav">
+                <button class="side-menu-item" @onclick='() => Nav.NavigateTo("/")'>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    Search
+                </button>
+                <button class="side-menu-item active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    Log
+                </button>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- ── Main content ───────────────────────────────────── -->
+    <main class="main-content">
+        <div class="content-inner">
+
+            <div class="results-header" style="margin-bottom: 20px;">
+                <h2 class="search-card-title">Search Log</h2>
+                <span class="results-count">@_entries.Count @(_entries.Count == 1 ? "entry" : "entries")</span>
+            </div>
+
+            @if (_entries.Count == 0)
+            {
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    <p>No log entries yet.</p>
+                    <span class="empty-hint">Entries appear here after the first search.</span>
+                </div>
+            }
+            else
+            {
+                <div class="results-list">
+                    @foreach (var entry in _entries)
+                    {
+                        <div class="log-entry-card @(entry.IsSearch ? "card-search" : "card-result")">
+                            <!-- Meta-Zeile: Timestamp + User + Badge -->
+                            <div class="log-entry-meta">
+                                <span class="log-timestamp">
+                                    @entry.Timestamp
+                                    <span class="log-user">· User: @entry.User</span>
+                                </span>
+                                <span class="log-type-badge @(entry.IsSearch ? "badge-search" : "badge-result")">
+                                    @(entry.IsSearch ? "Search" : "Result")
+                                </span>
+                            </div>
+
+                            @if (entry.IsSearch)
+                            {
+                                <!-- Search-Einträge: immer vollständig anzeigen -->
+                                <div class="log-entry-body">@entry.Summary</div>
+                            }
+                            else
+                            {
+                                <!-- Result-Einträge: ausklappbar -->
+                                <button class="log-expand-btn" @onclick="() => entry.ToggleExpanded()">
+                                    <span>@entry.Summary</span>
+                                    <svg class="expand-chevron @(entry.IsExpanded ? "is-open" : "")"
+                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </button>
+
+                                @if (entry.IsExpanded && entry.Detail is not null)
+                                {
+                                    <div class="log-entry-detail">
+                                        @foreach (var interaction in entry.Detail)
+                                        {
+                                            <div class="log-interaction-block">@interaction</div>
+                                        }
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+        </div>
+    </main>
+</div>
+
+<style>
+    .log-entry-card {
+        background: #fff;
+        border: 1.5px solid #dde3ea;
+        border-left-width: 5px;
+        border-radius: var(--radius);
+        padding: 14px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        box-shadow: var(--shadow-sm);
+    }
+    .log-entry-card.card-search { border-left-color: var(--blue); }
+    .log-entry-card.card-result { border-left-color: rgba(28,43,58,0.55); }
+
+    .log-entry-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .log-timestamp {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        letter-spacing: 0.3px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .log-user {
+        font-weight: 400;
+        color: var(--text-muted);
+    }
+
+    .log-type-badge {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        padding: 2px 10px;
+        border-radius: 99px;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    .badge-search { background: var(--blue); }
+    .badge-result { background: rgba(28,43,58,0.55); }
+
+    .log-entry-body {
+        font-size: 13px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    /* Ausklapp-Button */
+    .log-expand-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-align: left;
+        gap: 8px;
+        cursor: pointer;
+        width: 100%;
+    }
+    .log-expand-btn:hover { color: var(--blue); }
+
+    .expand-chevron {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+        color: var(--text-muted);
+    }
+    .expand-chevron.is-open { transform: rotate(180deg); }
+
+    /* Detail-Block -->*/
+    .log-entry-detail {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 4px;
+        padding-top: 10px;
+        border-top: 1px solid #eaeef2;
+    }
+
+    .log-interaction-block {
+        font-size: 12.5px;
+        color: var(--text-secondary);
+        white-space: pre-wrap;
+        line-height: 1.6;
+        padding: 8px 12px;
+        background: var(--bg);
+        border-radius: var(--radius);
+        border: 1px solid #e0e6ec;
+    }
+</style>
+
+@code {
+    private bool _menuOpen = false;
+    private List<LogEntry> _entries = new();
+
+    private const string LogFilePath = "logs/search.log";
+
+    protected override void OnInitialized()
+    {
+        LoadEntries();
+    }
+
+    private void LoadEntries()
+    {
+        if (!File.Exists(LogFilePath))
+            return;
+
+        var raw = File.ReadAllText(LogFilePath);
+
+        _entries = raw
+            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries)
+            .Select(ParseEntry)
+            .Where(e => e is not null)
+            .Cast<LogEntry>()
+            .Reverse()
+            .ToList();
+    }
+
+    private static LogEntry? ParseEntry(string block)
+    {
+        var lines = block.Trim().Split('\n');
+        if (lines.Length < 3) return null;
+
+        var timestamp = lines[0].Trim('[', ']');
+
+        // lines[1] = "User: unknown" oder "User: 127.0.0.1"
+        var user = lines[1].StartsWith("User: ")
+            ? lines[1]["User: ".Length..].Trim()
+            : "unknown";
+
+        // lines[2] = Summary ("Searched for: ..." oder "Result: N interactions")
+        var summary = lines[2].Trim();
+        bool isSearch = summary.StartsWith("Searched for:");
+
+        List<string>? detail = null;
+        if (!isSearch && lines.Length > 3)
+        {
+            var detailRaw = string.Join("\n", lines.Skip(3));
+            detail = detailRaw
+                .Split("\n---\n", StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim())
+                .Where(s => s.Length > 0)
+                .ToList();
+        }
+
+        return new LogEntry(timestamp, user, summary, isSearch, detail);
+    }
+
+    private void ToggleMenu() => _menuOpen = !_menuOpen;
+    private void CloseMenu() => _menuOpen = false;
+
+    private class LogEntry(string timestamp, string user, string summary, bool isSearch, List<string>? detail = null)
+    {
+        public string Timestamp  { get; } = timestamp;
+        public string User       { get; } = user;
+        public string Summary    { get; } = summary;
+        public bool   IsSearch   { get; } = isSearch;
+        public List<string>? Detail { get; } = detail;
+        public bool IsExpanded   { get; private set; } = false;
+
+        public void ToggleExpanded() => IsExpanded = !IsExpanded;
+    }
+}

@@ -1,6 +1,7 @@
 @page "/"
 @rendermode InteractiveServer
 @inject DataClient DataClient
+@inject NavigationManager Nav
 
 <PageTitle>DDI Checker</PageTitle>
 
@@ -37,7 +38,7 @@
                     </svg>
                     Search
                 </button>
-                <button class="side-menu-item disabled" disabled title="Coming soon">
+                <button class="side-menu-item" @onclick='() => Nav.NavigateTo("/log")'>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
@@ -67,7 +68,7 @@
                         <input id="drug1"
                                class="search-input @(_drug1Error ? "input-error" : "")"
                                type="text"
-                               placeholder="e.g. Warfarin"
+                               placeholder="e.g. Cocaine"
                                @bind="_drug1"
                                @bind:event="oninput"
                                @onkeydown="HandleKeyDown"
@@ -88,7 +89,7 @@
                         <input id="drug2"
                                class="search-input"
                                type="text"
-                               placeholder="e.g. Aspirin"
+                               placeholder="e.g. Chlorpromazine"
                                @bind="_drug2"
                                @bind:event="oninput"
                                @onkeydown="HandleKeyDown"
@@ -126,14 +127,14 @@
                     @if (_results.Count == 0)
                     {
                         <div class="empty-state">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <svg class="no-interaction-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <circle cx="12" cy="12" r="10"/>
-                                <path d="M8 15s1.5-2 4-2 4 2 4 2"/>
-                                <line x1="9" y1="9" x2="9.01" y2="9"/>
-                                <line x1="15" y1="9" x2="15.01" y2="9"/>
+                                <polyline points="7 12.5 10.5 16 17 9"/>
                             </svg>
                             <p>No interactions found for <strong>@_searchedDrug1@(!string.IsNullOrWhiteSpace(_searchedDrug2) ? $" ↔ {_searchedDrug2}" : "")</strong>.</p>
-                            <span class="empty-hint">Try a broader search or check the spelling.</span>
+                            <span class="empty-disclaimer">
+                                ⚠ This does not guarantee the combination is safe. Always consult a healthcare professional before making clinical decisions.
+                            </span>
                         </div>
                     }
                     else
@@ -193,6 +194,11 @@
     private bool _loading = false;
     private bool _drug1Error = false;
 
+    private CompositeSearchLogger logger = new CompositeSearchLogger(
+        new FileLogger("logs/search.log")
+        // später: new ConsoleLogger(), new UiLogger(...)
+    );
+
     private List<AInteraction> _results = new();
 
     private void ToggleMenu() => _menuOpen = !_menuOpen;
@@ -220,6 +226,9 @@
         _searchedDrug2 = _drug2.Trim();
         StateHasChanged();
 
+        
+        logger.LogSearch(_searchedDrug1, _searchedDrug2, DateTime.Now, null);
+
         var d1 = _searchedDrug1;
         var d2 = _searchedDrug2;
 
@@ -233,6 +242,8 @@
 
         _results = found;
         _loading = false;
+
+        logger.LogResult(found, DateTime.Now, null);
     }
 
     private void Clear()

@@ -22,7 +22,7 @@ namespace DDI_Checker.Infrastructure
         { }
 
         public override string ToString() =>
-            $"[ONC High Priority] {Drug1.Name} ↔ {Drug2.Name}\n" +
+            $"[DrugBank] {Drug1.Name} [{Drug1.DrugBankId}] ↔ {Drug2.Name} [{Drug2.DrugBankId}]\n" +
             $"Severity: {Severity}";
     }
 }

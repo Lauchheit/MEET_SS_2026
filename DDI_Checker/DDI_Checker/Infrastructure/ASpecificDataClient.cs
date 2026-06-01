@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Tracing;
 using System.Text;
+
+using DDI_Checker.Core.Models;
 
 namespace DDI_Checker.Infrastructure
 {
-    public abstract class ASpecificDataClient<T> where T : AInteraction
+    public abstract class ASpecificDataClient<T>  where T : AInteraction
     {
         public List<T> Interactions { get; } = new();
 
         protected abstract T ParseLine(string line);
+
         public void Fetch(string filepath)
         {
             foreach (var line in File.ReadLines(filepath).Skip(1)) // Skip header 
@@ -25,6 +29,8 @@ namespace DDI_Checker.Infrastructure
                 }
             }
         }
+
+        
     }
 
     public class DrugBankClient : ASpecificDataClient<DrugBankInteraction>

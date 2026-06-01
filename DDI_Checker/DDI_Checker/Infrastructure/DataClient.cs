@@ -1,6 +1,6 @@
 using DDI_Checker.Infrastructure;
 using FuzzySharp;
-
+using DDI_Checker.Core.Models;
 namespace DDI_Checker.Infrastructure
 {
     public class DataClient
@@ -8,6 +8,7 @@ namespace DDI_Checker.Infrastructure
         private readonly DrugBankClient _drugBankClient = new();
         private readonly OncHighPriorityClient _oncHighClient = new();
         private readonly OncNonInterruptiveClient _oncNonInterruptiveClient = new();
+
 
         public IEnumerable<AInteraction> AllInteractions = Enumerable.Empty<AInteraction>();
 
@@ -29,7 +30,10 @@ namespace DDI_Checker.Infrastructure
                 .Concat<AInteraction>(_oncHighClient.Interactions)
                 .Concat(_oncNonInterruptiveClient.Interactions);
         }
-
+        public void InvalidateCache()
+        {
+            AllInteractions = Enumerable.Empty<AInteraction>();
+        }
         public IEnumerable<AInteraction> GetAllInteractions()
         {
             if (!AllInteractions.Any())
