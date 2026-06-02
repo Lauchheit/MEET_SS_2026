@@ -1,6 +1,4 @@
-using DDI_Checker.Core.Models;
-
-namespace DDI_Checker.Infrastructure
+namespace DDI_Checker.Core.Models
 {
     public class DrugBankInteraction : AInteraction
     {
