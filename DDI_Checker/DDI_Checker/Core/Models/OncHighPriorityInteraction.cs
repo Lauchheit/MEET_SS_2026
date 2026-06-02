@@ -1,9 +1,8 @@
-﻿using DDI_Checker.Core.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DDI_Checker.Infrastructure
+namespace DDI_Checker.Core.Models
 {
     public class OncHighPriorityInteraction : AInteraction
     {

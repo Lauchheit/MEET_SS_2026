@@ -1,4 +1,3 @@
-using DDI_Checker.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Net;

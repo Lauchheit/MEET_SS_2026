@@ -1,4 +1,3 @@
-using DDI_Checker.Infrastructure;
 using FuzzySharp;
 using DDI_Checker.Core.Models;
 namespace DDI_Checker.Infrastructure
