@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MedSuche</title>
+  <title>MedSearch</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,36 +31,6 @@
     }
     .logo span { color: #1a1814; }
 
-    #emergency-banner {
-      display: none;
-      background: #fdf0ee;
-      border: 1.5px solid #c0392b;
-      border-radius: 8px;
-      margin: 16px 28px 0;
-      padding: 12px 18px;
-      gap: 12px;
-      align-items: flex-start;
-    }
-    #emergency-banner.visible { display: flex; }
-
-    .emergency-text strong { display: block; color: #c0392b; font-size: 0.9rem; margin-bottom: 2px; }
-    .emergency-text p { font-size: 0.82rem; color: #7a2a20; }
-    .emergency-text a { color: #c0392b; font-weight: 500; text-decoration: none; }
-    .emergency-close {
-      margin-left: auto; background: none; border: none;
-      cursor: pointer; color: #c0392b; font-size: 1.1rem;
-      padding: 0 4px; flex-shrink: 0;
-    }
-
-    .disclaimer {
-      margin: 12px 28px 0;
-      padding: 8px 14px;
-      background: #e8f2ec;
-      border-left: 3px solid #1a5c3a;
-      font-size: 0.78rem;
-      color: #2d5a3d;
-    }
-
     main {
       max-width: 800px;
       margin: 0 auto;
@@ -73,65 +43,114 @@
       border-radius: 8px;
       padding: 20px;
     }
+
+    .source-icon {
+      font-size: 0.85rem;
+      margin-bottom: 3px;
+      display: block;
+      line-height: 1;
+    }
+
+    /* Legend */
+    .legend {
+      margin-top: 32px;
+      padding: 14px 18px;
+      background: #fff;
+      border: 1px solid #e5e2da;
+      border-radius: 8px;
+    }
+
+    .legend-title {
+      font-size: 0.72rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #888;
+      margin-bottom: 10px;
+    }
+
+    .legend-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 20px;
+    }
+
+    .legend-item {
+      font-size: 0.8rem;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
   </style>
 
-  <!-- PSE: parsetags explicit verhindert Auto-Rendering-Konflikte -->
-  <script>window.__gcse = { parsetags: 'explicit' };</script>
-  <script async src="https://cse.google.com/cse.js?cx=059eb1c8bf67040e8" onload="renderSearch()"></script>
+  <script async src="https://cse.google.com/cse.js?cx=059eb1c8bf67040e8"></script>
 </head>
 <body>
 
 <header>
-  <div class="logo">Med<span>Suche</span></div>
+  <div class="logo">Med<span>Search</span></div>
 </header>
 
-<div id="emergency-banner">
-  <div class="emergency-text">
-    <strong>🚨 Bei einem Notfall sofort Hilfe rufen!</strong>
-    <p>Notruf: <a href="tel:112">112</a> &nbsp;|&nbsp; Ärztebereitschaft: <a href="tel:141">141</a> &nbsp;|&nbsp; Giftnotruf AT: <a href="tel:+431406343">+43 1 406 43 43</a></p>
-  </div>
-  <button class="emergency-close" onclick="document.getElementById('emergency-banner').classList.remove('visible')">✕</button>
-</div>
-
-<div class="disclaimer">
-  ℹ️ Diese Ergebnisse ersetzen <strong>keine ärztliche Beratung</strong>. Im Notfall: 112.
-</div>
-
 <main>
-  <div id="search-wrapper">
-    <div id="pse-searchbox"></div>
-    <div id="pse-results"></div>
+    <div class="legend">
+    <div class="legend-title">Source types</div>
+    <div class="legend-items">
+      <div class="legend-item">🏛 Government agency</div>
+      <div class="legend-item">🤝 Non-profit</div>
+      <div class="legend-item">🎓 University</div>
+      <div class="legend-item">🏢 Commercial</div>
+    </div>
   </div>
+  <div id="search-wrapper">
+    <div class="gcse-search"></div>
+  </div>
+
+  
 </main>
 
 <script>
-  const EMERGENCY = [
-    "notfall","notruf","emergency","chest pain","brustschmerzen",
-    "herzinfarkt","heart attack","schlaganfall","stroke",
-    "bewusstlos","unconscious","suizid","suicide","selbstverletzung",
-    "vergiftung","poisoning","ersticken","choking","atemnot",
-    "krampf","seizure","anaphylaxie","anaphylaxis"
+  const SOURCES = [
+    { match: "nih.gov",                type: "gov", icon: "🏛" },
+    { match: "cdc.gov",                type: "gov", icon: "🏛" },
+    { match: "medlineplus.gov",        type: "gov", icon: "🏛" },
+    { match: "nhs.uk",                 type: "gov", icon: "🏛" },
+    { match: "mayoclinic.org",         type: "npo", icon: "🤝" },
+    { match: "my.clevelandclinic.org", type: "npo", icon: "🤝" },
+    { match: "rarediseases.org",       type: "npo", icon: "🤝" },
+    { match: "health.harvard.edu",     type: "uni", icon: "🎓" },
+    { match: "hopkinsmedicine.org",    type: "uni", icon: "🎓" },
+    { match: "merckmanuals.com",       type: "com", icon: "🏢" },
+    { match: "webmd.com",              type: "com", icon: "🏢" },
+    { match: "healthline.com",         type: "com", icon: "🏢" },
   ];
 
-  function checkEmergency(q) {
-    const lower = q.toLowerCase();
-    return EMERGENCY.some(kw => lower.includes(kw));
+  function getSource(url) {
+    return SOURCES.find(s => url.includes(s.match)) || null;
   }
 
-  function renderSearch() {
-    google.search.cse.element.render(
-      { div: "pse-searchbox", tag: "searchbox",       gname: "med" },
-      { div: "pse-results",   tag: "searchresults",   gname: "med" }
-    );
+  function injectBadges() {
+    document.querySelectorAll(".gsc-result").forEach(result => {
+      if (result.dataset.badged) return;
 
-    google.search.cse.element.getElement("med")
-      .setSearchStartingCallback(null, function(gname, query) {
-        const banner = document.getElementById("emergency-banner");
-        checkEmergency(query)
-          ? banner.classList.add("visible")
-          : banner.classList.remove("visible");
-      });
+      const linkEl = result.querySelector("a.gs-title");
+      if (!linkEl) return;
+
+      const url = linkEl.getAttribute("data-cturl") || linkEl.href || "";
+      const source = getSource(url);
+      if (!source) return;
+
+      result.dataset.badged = "1";
+
+      const icon = document.createElement("span");
+      icon.className = "source-icon";
+      icon.textContent = source.icon;
+      linkEl.parentNode.insertBefore(icon, linkEl);
+    });
   }
+
+  new MutationObserver(injectBadges)
+    .observe(document.body, { childList: true, subtree: true });
 </script>
 
 </body>
